@@ -1,0 +1,11 @@
+//Remove files added with git add without an f flag
+git rm --cached -r .\src\
+
+//Show files status
+git status -s     
+
+//add files
+git add <<sources>>
+
+//show ignored files
+ git status -ignored 

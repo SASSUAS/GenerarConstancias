@@ -1,0 +1,30 @@
+func returnCachedFontData(ttfpath *string) (*bytes.Reader, error) {
+	fmt.Println(*ttfpath)
+	i, ok := fontCache[*ttfpath]
+	if !ok {
+		data, err := ioutil.ReadFile(*ttfpath)
+		if err != nil {
+			fmt.Println(err.Error())
+			return nil, err
+		}
+		fontCache[*ttfpath] = bytes.NewReader(data)
+		return fontCache[*ttfpath], nil
+	} else {
+		return i, nil
+	}
+}
+
+func returnCachedFontData(ttfpath *string) (*bytes.Reader, error) {
+	i, ok := fontCache.Load(*ttfpath)
+	if !ok {
+		data, err := ioutil.ReadFile(*ttfpath)
+		if err != nil {
+			return nil, err
+		}
+		fontCache.Store(*ttfpath, bytes.NewReader(data))
+		i, _ = fontCache.Load(*ttfpath)
+		return i.(*bytes.Reader), nil
+	} else {
+		return i.(*bytes.Reader), nil
+	}
+}
