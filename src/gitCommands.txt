@@ -8,4 +8,18 @@ git status -s
 git add <<sources>>
 
 //show ignored files
- git status -ignored 
+git status -ignored
+
+//Para mostrar log de datos en git
+git log --oneline 
+
+git remote set-url origin git@github.com:SASSUAS/GenerarConstancias.git
+git remote set-url origin https://github.com/SASSUAS/GenerarConstancias.git    
+git push -u origin master
+
+/*If the problem is "main and master are entirely different commit histories.", the following will work*/
+
+git checkout master   
+git branch main master -f    
+git checkout main  
+git push origin main -f 
