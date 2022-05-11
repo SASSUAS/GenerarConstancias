@@ -18,7 +18,7 @@ func init() {
 func BenchmarkCreatePDF(b *testing.B) {
 
 	b.Run(fmt.Sprintf("BenchmarkCreatePDF"), func(b *testing.B) {
-		createPDF(&datosEventoList, PDF_NAME, &jsonConfig)
+		createPDF(&datosEventoList, &PDF_NAME, &jsonConfig)
 	})
 }
 

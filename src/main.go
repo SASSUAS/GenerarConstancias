@@ -3,14 +3,12 @@ package main
 import (
 	"encoding/csv"
 	"encoding/json"
-	"flag"
 	"fmt"
 	s "gsheet-to-json-csv/src/services"
 	u "gsheet-to-json-csv/src/utils"
 	"io/ioutil"
 	"os"
 	"reflect"
-	"runtime/pprof"
 	"strings"
 	"sync"
 
@@ -41,6 +39,7 @@ type Config struct {
 	PDFName            string `json:"PDFName"`
 	DescargarCSVGoogle int16  `json:"DescargarCSVGoogle"`
 	OmitirValoresCSV   int16  `json:"OmitirValoresCSV"`
+	UsarGORoutines     int16  `json:"UsarGORoutines"`
 	NombreEvento       string `json:"NombreEvento"`
 	FechaEvento        string `json:"FechaEvento"`
 	FechaConstancia    string `json:"FechaConstancia"`
@@ -255,7 +254,7 @@ func createConcurrentPDF(nombrePDFs *string, anchoPagina float64, altoPagina flo
 	wgrp.Done()
 }
 
-func createPDF(datosEventoList *[]EventosRecord, nombrePDFs string, jsonConfig *Config) {
+func createPDF(datosEventoList *[]EventosRecord, nombrePDFs *string, jsonConfig *Config) {
 	anchoPagina := 791.63
 	altoPagina := 612.01
 	descripcionTamano := 16
@@ -314,9 +313,9 @@ func createPDF(datosEventoList *[]EventosRecord, nombrePDFs string, jsonConfig *
 
 		if jsonConfig.OmitirValoresCSV == 1 {
 			pdfNumbers += 1
-			pdf.WritePdf(OUTPUT_FOLDER + nombrePDFs + fmt.Sprintf(formatoSprintf, i) + ".pdf")
+			pdf.WritePdf(OUTPUT_FOLDER + *nombrePDFs + fmt.Sprintf(formatoSprintf, i) + ".pdf")
 		} else {
-			pdf.WritePdf(OUTPUT_FOLDER + nombrePDFs + rowData.ConsecutivoEvento + ".pdf")
+			pdf.WritePdf(OUTPUT_FOLDER + *nombrePDFs + rowData.ConsecutivoEvento + ".pdf")
 		}
 		printLogs("La cantidad de PDFs generados fueron de: %d \n", pdfNumbers)
 
@@ -357,21 +356,9 @@ func loadConfiguration(strConfig *Config) {
 	}
 
 	u.GeneralLogger.Println(strConfig)
-	//fmt.Printf("%#v", strConfig)
-
 }
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-var memprofile = flag.String("memprofile", "", "write memory profile to this file")
-
 func main() {
-	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		u.IsError(err, "")
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-	}
 	jsonConfig := initConfiguration()
 
 	if jsonConfig.DescargarCSVGoogle == 1 {
@@ -380,26 +367,14 @@ func main() {
 	} else {
 		u.GeneralLogger.Println("No se descargo nada")
 	}
-	//Como antes obteniamos datos de los eventos
-	//datosEventoList := ObtenerDatosEventoRecord(jsonConfig.FolderCSVsDownload)
 	var datosEventoList []EventosRecord
-	//{
 	mapaEvento := CSVFileToMapOnlyRequiredFields(&jsonConfig)
-	//mapaEvento := CSVFileToMap(jsonConfig.FolderCSVsDownload)
 	datosEventoList = CSVDataToEventStruct(&mapaEvento, &jsonConfig)
-	//u.GeneralLogger.Println(mapaEvento)
-
-	//}
-	//fmt.Printf("%#v", datosEventoList)
 	printLogs("Inicia generacion de PDFs %s \n", "")
-	//createPDF(&datosEventoList, PDF_NAME, &jsonConfig)
-	loadPDFData(&datosEventoList, &PDF_NAME, &jsonConfig)
-	printLogs("Termina generacion de PDFs %s \n", "")
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		u.IsError(err, "")
-		pprof.WriteHeapProfile(f)
-		f.Close()
-		return
+	if jsonConfig.UsarGORoutines == 1 {
+		loadPDFData(&datosEventoList, &PDF_NAME, &jsonConfig)
+	} else {
+		createPDF(&datosEventoList, &PDF_NAME, &jsonConfig)
 	}
+	printLogs("Termina generacion de PDFs %s \n", "")
 }
