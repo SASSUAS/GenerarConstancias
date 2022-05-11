@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/signintech/gopdf"
 )
@@ -317,11 +318,7 @@ func createPDF(datosEventoList *[]EventosRecord, nombrePDFs *string, jsonConfig 
 		} else {
 			pdf.WritePdf(OUTPUT_FOLDER + *nombrePDFs + rowData.ConsecutivoEvento + ".pdf")
 		}
-		printLogs("La cantidad de PDFs generados fueron de: %d \n", pdfNumbers)
-
-		if pdfNumbers == 5 {
-			break
-		}
+		//printLogs("La cantidad de PDFs generados fueron de: %d \n", pdfNumbers)
 	}
 }
 
@@ -371,10 +368,13 @@ func main() {
 	mapaEvento := CSVFileToMapOnlyRequiredFields(&jsonConfig)
 	datosEventoList = CSVDataToEventStruct(&mapaEvento, &jsonConfig)
 	printLogs("Inicia generacion de PDFs %s \n", "")
+	start := time.Now()
 	if jsonConfig.UsarGORoutines == 1 {
 		loadPDFData(&datosEventoList, &PDF_NAME, &jsonConfig)
 	} else {
 		createPDF(&datosEventoList, &PDF_NAME, &jsonConfig)
 	}
+	elapsed := time.Since(start)
+	u.GeneralLogger.Printf("Tiempo usado para la generacion de PDFs: %s \n", elapsed)
 	printLogs("Termina generacion de PDFs %s \n", "")
 }
